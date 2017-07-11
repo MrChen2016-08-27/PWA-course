@@ -3,16 +3,30 @@ var urlsToCache = [
 	'/',
 	'/style/main.css'
 ];
-//安装
+/** 
+* 安装 
+* 不会将 data1 cache.addAll promise 传递回 event.waitUntil
+* 因此，即使它失败，在离线状态下仍然可用
+* 对应的本机应用会将这些对象包含在初始下载中
+* 如果未能提取 data 2 对象，将使您的网站完全无法运行，
+* 对应的本机应用会将 data 2包含在初始下载中。
+*/
 self.addEventListener('install', function(events){
 	events.waitUntil(
 		caches.open(CACHE_NAME)
 			.then(function(cache){
 				console.log('Opened cache');
+				// data 1
+				cache.addAll([
+					'/vedio.avi'
+				]);
+				// data 2
 				return cache.addAll(urlsToCache);
 			})
 	);
 });
+
+
 
 //缓存和返回 请求
 self.addEventListener('fetch', function(event){
@@ -68,3 +82,30 @@ self.addEventListener('activate', function(event){
 			);
 		}));
 });
+
+/**
+* 为用户提供一个“Read later”或“Save for offline”按钮。
+* 在点击该按钮后，从网络获取您需要的内容并将其置于缓存中
+* caches API 可通过页面以及服务工作线程获取，
+* 这意味着您不需要通过服务工作线程向缓存添加内容。
+*/
+
+(function(){
+	document.querySelector('.cache-article').addEventListener('click', function(event){
+		event.preventDefault();
+		caches.open('mysite-article')
+			.then(function(cache){
+				fetch('//get-article-urls?id=1')
+					.then(function(response){
+						return response.json();
+					})
+					.then(function(urls){
+						cache.addAll(urls);
+					});
+			});
+	});
+
+}());
+
+
+
