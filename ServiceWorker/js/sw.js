@@ -18,7 +18,7 @@ self.addEventListener('install', function(events){
 				console.log('Opened cache');
 				// data 1
 				cache.addAll([
-					'/vedio.avi'
+					'/style/main.css'
 				]);
 				// data 2
 				return cache.addAll(urlsToCache);
@@ -83,29 +83,21 @@ self.addEventListener('activate', function(event){
 		}));
 });
 
-/**
-* 为用户提供一个“Read later”或“Save for offline”按钮。
-* 在点击该按钮后，从网络获取您需要的内容并将其置于缓存中
-* caches API 可通过页面以及服务工作线程获取，
-* 这意味着您不需要通过服务工作线程向缓存添加内容。
-*/
-
-(function(){
-	document.querySelector('.cache-article').addEventListener('click', function(event){
-		event.preventDefault();
-		caches.open('mysite-article')
+//如果有可用的缓存版本，则使用该版本，但下次会获取更新
+self.addEventListener('fetch', function(event){
+	event.respondWith(
+		caches.open('mysite-dynamic')
 			.then(function(cache){
-				fetch('//get-article-urls?id=1')
+				return cache.match(event.request)
 					.then(function(response){
-						return response.json();
+						var fetcbPromise = fetch(event.request)
+							.then(function(networkResponse){
+								cache.put(event.request,networkResponse.clone());
+								return networkResponse;
+							});
+						return response || networkResponse;
 					})
-					.then(function(urls){
-						cache.addAll(urls);
-					});
-			});
-	});
-
-}());
-
-
+			})
+	);
+});
 
