@@ -101,3 +101,64 @@ self.addEventListener('fetch', function(event){
 	);
 });
 
+/**
+ * Push API 是基于 ServiceWorker 构建的另一个功能。
+ * 该 API 允许唤醒 ServiceWorker 以响应来自操作系统消息传递服务的消息。
+ * 即使用户没有为您的网站打开标签，也会如此，仅唤醒 ServiceWorker。 
+ * 您从页面请求执行此操作的权限，用户将收到提示。
+ */
+
+/*
+* 消息推送
+* 显示通知前, 先更新缓存
+ */
+self.addEventListener('push', function(event){
+	if(event.data.text() === 'new-email'){
+		event.waitUntil(
+			caches.open('mysite-dynamic')
+				.then(function(cache){
+					return fetch('./inbox.json')
+						.then(function(response){
+							cache.put('./inbox.json', response.clone());
+							return response.json();
+						});
+				})
+				.then(function(emails){
+					registration.showNotification("New email", {
+						body: "From" + emails[0].from.name,
+						tag: "new-email"
+					});
+				});
+		)
+	}	
+});
+/*
+* 推送消息被点击
+*/ 
+self.addEventListener('notificationclick', function(event){
+	if(event.notification.tag === 'new-email'){
+		new WindowClient('/inbox/');
+	}
+});
+
+/*
+* 后台同步是基于 ServiceWorker 构建的另一个功能。
+* 它允许您一次性或按（非常具有启发性的）间隔请求后台数据同步。 
+* 即使用户没有为您的网站打开标签，也会如此，仅唤醒 ServiceWorker。
+* 您从页面请求执行此操作的权限，用户将收到提示。
+* 适合于： 非紧急更新，特别那些定期进行的更新，
+* 每次更新都发送一个推送通知会显得太频繁，如社交时间表或新闻文章。
+ */
+
+self.addEventListener('sync', function(event){
+	if(event.id === 'update-leader'){
+		event.waitUntil(
+			caches.open('mygame-dynamic')
+				.then(function(cache){
+					return cache.add('./xxxx.json');
+				});
+		);
+	}
+});
+
+
