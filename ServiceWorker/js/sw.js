@@ -161,4 +161,16 @@ self.addEventListener('sync', function(event){
 	}
 });
 
+/**
+ * 缓存持久化
+ * 为您的源提供特定量的可用空间以执行它需要的操作。
+ * 该可用空间可在所有源存储之间共享。
+ *  LocalStorage、IndexedDB、Filesystem，当然还有 Caches。
+ */
+
+navigator.storage.requestPersistent().then(function(granted) {
+  if (granted) {
+    // Hurrah, your data is here to stay!
+  }
+});
 
