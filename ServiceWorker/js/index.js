@@ -21,7 +21,7 @@
 			event.preventDefault();
 			caches.open('mysite-article')
 				.then(function(cache){
-					fetch('http://api.biaojingli.com/api/v1/admin/tenders?page=1&limit=10')
+					fetch('test')
 						.then(function(response){
 							return response.json();
 						})
