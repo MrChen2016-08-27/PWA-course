@@ -1,4 +1,5 @@
 const cacheName = 'cacheFiles-list';
+const dataCacheName = 'weatherData-v1';
 var filesToCache = [
   '/',
   '/index.html',
@@ -18,6 +19,7 @@ var filesToCache = [
   '/images/thunderstorm.png',
   '/images/wind.png'
 ];
+
 self.addEventListener('install', function(event){
 	console.log('ServiceWorker install ....');
 	event.waitUntil(
@@ -35,7 +37,7 @@ self.addEventListener('activate', function(event){
 	event.waitUntil(
 		caches.keys().then(function(keyList){
 			return Promise.all(keyList.map(function(key){
-				if(key !== cacheName){
+				if(key !== cacheName && key !== dataCacheName){
 					console.log('ServiceWorker Removing old cache', key);
 					return caches.delete(key);
 				}
@@ -43,4 +45,25 @@ self.addEventListener('activate', function(event){
 		})
 	)
 	return self.clients.claim();
+});
+
+self.addEventListener('fetch', function(event){
+	console.log('ServiceWorker fetch', event.request.url);
+	var dataUrl = 'https://query.yahooapis.com/v1/public/yql';
+	//如果拦截的请求是你指定的
+	if(event.request.url.indexOf(dataUrl) > -1){
+		event.respondWith(
+			caches.open(dataCacheName).then(function(cache){
+				return fetch(event.request)
+					.then(function(response){
+						cache.put(event.request.url, response.clone());
+						return response;
+					});
+			})
+		);
+	}else{
+		caches.match(event.request).then(function(response){
+			return response || fetch(event.request);
+		});
+	}
 });
